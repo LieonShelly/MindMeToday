@@ -1,8 +1,8 @@
 /**
- * 
+ *  post API
  {
     "content":"sdfads",
-    "imageURL": [
+    "image_url": [
         "http:baidu.com/imag.jpg",
         "http:baidu.com/imag.jpg",
     ]
@@ -19,3 +19,13 @@
     "is_delete":0
  }
  */
+
+var express = require('express')
+var router = express.Router();
+let pool = require('../Tool/database')
+
+router.post('/add_post', (req, res) => {
+
+})
+
+module.exports = router;

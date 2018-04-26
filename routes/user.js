@@ -1,13 +1,6 @@
 var express = require('express')
 var router = express.Router()
-var mysql = require('mysql')
-var pool = mysql.createPool({
-    connectionLimit:10,
-    host:'localhost',
-    user: 'root',
-    port: 3306,
-    database:'demo'
-})
+var pool = require('../Tool/database')
 
 router.get('/users', (req, res) => {
     pool.query("SELECT DISTINCT last_name, first_name  FROM user ORDER BY last_name;", (err, results) => {
@@ -36,3 +29,16 @@ router.post('/user_create', (req, res) => {
 })
 
 module.exports = router
+
+/**
+
+{
+    "username": "lieon",
+    "password":"2312wada@***",
+    "icon_url": "https:hader.jpg",
+    "community_name":"QingShuiYard",
+    "community_id": 11,
+
+}
+
+ */
