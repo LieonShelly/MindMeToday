@@ -3,7 +3,7 @@ var router = express.Router()
 var pool = require('../Tool/database')
 
 router.get('/users', (req, res) => {
-    pool.query("SELECT DISTINCT last_name, first_name  FROM user ORDER BY last_name;", (err, results) => {
+    pool.query("SELECT DISTINCT last_name, first_name, user_id FROM user ORDER BY last_name;", (err, results) => {
         if(err) {
             console.log(err)
             res.sendStatus(500)
