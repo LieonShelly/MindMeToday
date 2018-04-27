@@ -26,6 +26,7 @@ var pool = require('../Tool/database')
 var Share = require('../model/share')
 var pool = require('../Tool/database')
 var ResponseModel = require('../model/response')
+var UserInfo = require('../model/userInfo')
 
 router.post('/add_post', (req, res) => {
     const content = req.body.content
@@ -35,17 +36,74 @@ router.post('/add_post', (req, res) => {
     const shareEntity = new Share(imageUrl,"fuck", "fuck me now", "https:www.google.com")
     const shareString = JSON.stringify(shareEntity)
     const imageUrlStr = JSON.stringify(imageUrl)
-    const query = "INSERT INTO post(content, image_url, post_date, user_id, share_entity) VALUES (?, ?, ?,?,?);"
-    pool.query(query, [content, imageUrlStr, postDate, userId, shareString], (err, resluts, fields) => {
-        var response = new ResponseModel(0,"success")
-        if (err) {
-            response.code = -1
-            response.message = JSON.stringify(err)
-            res.json(response)
-        }else {
-            res.json(response)
-        }
+
+    var response = new ResponseModel(0,"success")
+    queruserInfo(userId).then((results) => {
+        var users = Array(results)
+        let user = users[0]
+        let uerStr = JSON.stringify(user)
+        return uerStr
+    }).then((userStr) => {
+       return  insertPost([content, imageUrlStr, postDate, userId, shareString, userStr])
+    }).then((result) => {
+        response.code = 0
+        response.message = JSON.stringify(result)
+        res.json(response)
+    })
+    .catch((error) => {
+        response.code = -1
+        response.message = JSON.stringify(error)
+        res.json(response)
+    })
+}) 
+
+router.get('/postlist', (req, res) => {
+    const query = ""
+    pool.query(query, (err, reslutls, fields) => {
+
     })
 })
+
+function insertPost(value)  { // 
+    return new Promise((resolve, reject) => {
+        const query = "INSERT INTO post(content, image_url, post_date, user_id, share_entity, user_info) VALUES (?, ?, ?,?,?,?);"
+        pool.query(query, value, (err, resluts, fields) => {
+            if (err) {
+                console.log("***************")
+                reject(err)
+            }else {
+                console.log("*******InsertSuccess********")
+                resolve(resluts)
+            }
+        })
+    })
+ 
+}
+
+function queryPostlist () {
+    return new Promise((resolve, reject) => {
+        const query = "SELECT DISTINCT icon_url, username from user WHERE user_id = ?;"
+        pool.query(query,[userId],  (err, resluts, fields) => {
+            if(err) {
+                reject(err)
+            } else {
+                resolve(resluts)
+            }
+        })
+    })
+}
+
+function queruserInfo(userId) {
+    return new Promise((resolve, reject) => {
+        const query = "SELECT DISTINCT icon_url, username from user WHERE user_id = ?;"
+        pool.query(query,[userId],  (err, resluts, fields) => {
+            if(err) {
+                reject(err)
+            } else {
+                resolve(resluts)
+            }
+        })
+    })
+}
 
 module.exports = router
