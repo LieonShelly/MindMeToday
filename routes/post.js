@@ -38,30 +38,38 @@ router.post('/add_post', (req, res) => {
     const imageUrlStr = JSON.stringify(imageUrl)
 
     var response = new ResponseModel(0,"success")
-    queruserInfo(userId).then((results) => {
-        var users = Array(results)
-        let user = users[0]
+    queruserInfo(userId).then((user) => {
         let uerStr = JSON.stringify(user)
         return uerStr
     }).then((userStr) => {
        return  insertPost([content, imageUrlStr, postDate, userId, shareString, userStr])
     }).then((result) => {
         response.code = 0
-        response.message = JSON.stringify(result)
-        res.json(response)
+        response.data = JSON.parse(JSON.stringify(result))
+        res.json(JSON.stringify(response))
     })
     .catch((error) => {
         response.code = -1
         response.message = JSON.stringify(error)
-        res.json(response)
+        res.json(JSON.stringify(response))
     })
 }) 
 
-router.get('/postlist', (req, res) => {
-    const query = ""
-    pool.query(query, (err, reslutls, fields) => {
-
-    })
+router.get('/post_list', (req, res) => {
+    const page = req.query.page
+    const num = req.query.num
+    var response = new ResponseModel(0,"success")
+    queryPostlist(page, num).then((lists) => {
+        console.log("Success")
+        response.data = lists
+        res.json(response)
+   })
+   .catch((err) => {
+        response.code = -1
+        response.message = JSON.stringify(err)
+        response.data = null
+        res.json(JSON.stringify(response))
+   })
 })
 
 function insertPost(value)  { // 
@@ -69,10 +77,8 @@ function insertPost(value)  { //
         const query = "INSERT INTO post(content, image_url, post_date, user_id, share_entity, user_info) VALUES (?, ?, ?,?,?,?);"
         pool.query(query, value, (err, resluts, fields) => {
             if (err) {
-                console.log("***************")
                 reject(err)
             }else {
-                console.log("*******InsertSuccess********")
                 resolve(resluts)
             }
         })
@@ -80,14 +86,27 @@ function insertPost(value)  { //
  
 }
 
-function queryPostlist () {
+function queryPostlist (page, num) {
     return new Promise((resolve, reject) => {
-        const query = "SELECT DISTINCT icon_url, username from user WHERE user_id = ?;"
-        pool.query(query,[userId],  (err, resluts, fields) => {
-            if(err) {
+        const query = "SELECT DISTINCT * from post LIMIT ?, ?; "
+        var queryPage = 0
+        if(Number(page) == 1) {
+            queryPage = 0
+        } else {
+            queryPage = Number(page) * Number(num)
+        }
+        pool.query(query,[queryPage, Number(num)],  (err, resluts, fields) => {
+            if(err && (Array(resluts)).length == 0 && Array.isArray(resluts)) {
                 reject(err)
+                console.log(err)
             } else {
+                resluts.forEach(element => {
+                    element.image_url = JSON.parse(element.image_url)
+                    element.share_entity = JSON.parse(element.share_entity)
+                    element.user_info = JSON.parse(element.user_info)
+                });
                 resolve(resluts)
+                console.log(resluts)
             }
         })
     })
@@ -100,7 +119,7 @@ function queruserInfo(userId) {
             if(err) {
                 reject(err)
             } else {
-                resolve(resluts)
+                resolve(resluts[0])
             }
         })
     })
