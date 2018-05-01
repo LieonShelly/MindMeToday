@@ -41,6 +41,7 @@ ADD UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC);
 var express = require('express')
 var router = express.Router()
 var pool = require('../Tool/database')
+var Response = require('../model/response')
 
 router.get('/users', (req, res) => {
     pool.query("SELECT DISTINCT last_name, first_name, user_id FROM user ORDER BY last_name;", (err, results) => {
@@ -54,17 +55,25 @@ router.get('/users', (req, res) => {
 });
 
 router.post('/user_create', (req, res) => {
-    var firstName = req.body.first_name
-    var lastName = req.body.last_name
-    const query = "REPLACE INTO user (first_name, last_name)  VALUES(?,?);"
-    pool.query(query, [firstName, lastName], (err, results, fields) => {
+    var username = req.body.username
+    var phone_num = req.body.phone_num
+    var icon_url = req.body.icon_url
+    var community_name = req.body.community_name
+    var community_id = req.body.community_id
+    var userType = req.body.userType 
+
+    const query = "REPLACE INTO user (username, phone_num, icon_url, community_name, community_id, userType)  VALUES(?, ?, ?, ?, ?, ?);"
+    var response = new Response(0, 'success', req.body)
+    pool.query(query, [username, phone_num, icon_url, community_name, community_id, userType], (err, results, fields) => {
         if(err) {
-        console.log("failed to insert new user:" + err)
-            res.sendStatus(500)
-            return
+            response.code = -1
+            response.message = JSON.stringify(err)
+            response.data = null
+            res.json(response)
+        } else {
+            res.json(response)
         }
-        res.sendStatus(200);
-        res.end()
+
     })
 })
 
