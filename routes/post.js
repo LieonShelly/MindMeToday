@@ -1,3 +1,4 @@
+
 /**
  *  post API
  {
@@ -27,8 +28,9 @@ var Share = require('../model/share')
 var pool = require('../Tool/database')
 var ResponseModel = require('../model/response')
 var UserInfo = require('../model/userInfo')
+const checkAuth = require('../middleware/check-auth')
 
-router.post('/add_post', (req, res) => {
+router.post('/add_post', checkAuth, (req, res) => {
     const content = req.body.content
     const imageUrl = req.body.image_url
     const postDate = req.body.post_date
