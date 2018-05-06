@@ -45,6 +45,7 @@ var pool = require('../Tool/database')
 var Response = require('../model/response')
 const bcrypt = require('bcrypt')
 var jwt = require('jsonwebtoken');
+const Token = require('../Tool/token')
 
 router.get('/users', (req, res) => {
     pool.query("SELECT DISTINCT last_name, first_name, user_id FROM user ORDER BY last_name;", (err, results) => {
@@ -58,7 +59,6 @@ router.get('/users', (req, res) => {
 });
 
 router.post('/signup', (req, res) => {
-    // 检查用户是否存在
     var response = new Response(0,"sucess")
     const phone_num = req.body.phone_num
     checkExistUser(phone_num)
@@ -77,17 +77,52 @@ router.post('/signup', (req, res) => {
         res.json(response)
     })
     .catch((error) => {
-
+        response.code = -1
+        response.data = null
+        response.message = JSON.stringify(error)
+        res.json(response)
     })
-
-    // 生成用户（手机号校验）
-  
-  
 })
 
 router.post('/login', (req, res) => {
     // 1. 从数据库中查找用户是否存在
     // 2. 校验密码是否正确npm install jsonwebtoken
+    var password = req.body.password
+
+    var response = new Response(0,"sucess")
+    checkExistUser(req.body.phone_num)
+    .then(results => {
+        if(results.length == 1) {
+            return results[0];
+        } else {
+            res.json({
+                "message": "user not exsit"
+            })
+        }
+    })
+    .then(user => {
+        var token = Token.createToken(user.username, user.phone_num)
+        response.data = {
+            "username": user.username,
+            "phone_num":  user.phone_num,
+            "icon_url":  user.icon_url,
+            "community_name":  user.community_name,
+            "community_id":  user.community_id,
+            "userType":  user.userType,
+            "token": token
+        }
+       return bcrypt.compare(password, user.password)
+    })
+    .then(flag => {
+        if(flag) {
+            res.json(response)
+        }
+    })
+    .catch(error => {
+        res.json({
+            "message": JSON.stringify(error)
+        })
+    })
 })
 
 function checkExistUser(phoneNum) {
@@ -123,16 +158,7 @@ function createNewUser(req) {
                     if(err) {
                        reject(err)
                     } else {
-                        var token = jwt.sign(
-                                         {
-                                            "username": username,
-                                            "phone_num": phone_num,
-                                         }, 
-                                        'secret',
-                                        {
-                                            expiresIn: '1h'
-                                        }
-                                    )
+                        var token = Token.createToken(username, phone_num)
                       resolve({
                           "username": username,
                           "phone_num": phone_num,

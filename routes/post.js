@@ -57,7 +57,7 @@ router.post('/add_post', checkAuth, (req, res) => {
     })
 }) 
 
-router.get('/post_list', (req, res) => {
+router.get('/post_list', checkAuth, (req, res) => {
     const page = req.query.page
     const num = req.query.num
     var response = new ResponseModel(0,"success")
