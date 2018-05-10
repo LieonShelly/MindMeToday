@@ -129,13 +129,13 @@ function checkExistUser(phoneNum) {
     return new Promise((resolve, reject) => {
         const query = "SELECT * FROM user WHERE phone_num = ?;"
         pool.query(query, [phoneNum], (err, resluts, fields) => {
-            console.log("checkExistUser:" + phoneNum)
             if(err) {
-                rejject(err)
+                console.log(err.code)
+                reject(err)
             } else {
                 resolve(resluts)
-            }
             console.log("checkExistUser:" + JSON.stringify(resluts));
+            }
         })
     })
   
@@ -145,6 +145,7 @@ function createNewUser(req) {
    return new Promise((resolve, reject) => {
     bcrypt.hash(req.body.password,10, (err, hash) => {
             if(err) {
+                console.log("**bcrypt Error**" + JSON.stringify(err))
                 reject(err)
             } else {
                 var username = req.body.username
